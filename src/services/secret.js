@@ -1,9 +1,8 @@
 import { request } from '../utils'
 
-export async function query(params) {
+export async function listSecrets() {
   return request({
-    url: '/v1/events',
+    url: '/v1/secrets',
     method: 'get',
-    data: params,
   })
 }

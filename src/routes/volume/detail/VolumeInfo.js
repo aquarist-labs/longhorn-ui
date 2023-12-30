@@ -33,15 +33,24 @@ function VolumeInfo({ selectedVolume, snapshotModalState, engineImages, hosts, c
   })
 
   if (isSchedulingFailure(selectedVolume)) {
-    errorMsg = (
-      <Alert
-        message="Scheduling Failure"
-        description={selectedVolume.conditions.scheduled.reason.replace(/([A-Z])/g, ' $1')}
-        type="warning"
-        className="ant-alert-error"
-        showIcon
-      />
-    )
+    const scheduledConditions = selectedVolume?.conditions?.scheduled
+    if (scheduledConditions) {
+      const { reason, message } = scheduledConditions
+      errorMsg = (
+        <Alert
+          message="Scheduling Failure"
+          description={
+            <div>
+              {reason && <div>{reason.replace(/([A-Z])/g, ' $1')}</div>}
+              {message && <div>{`Error Message: ${message}`}</div>}
+            </div>
+          }
+          type="warning"
+          className="ant-alert-error"
+          showIcon
+        />
+      )
+    }
   }
   const computeActualSize = selectedVolume && selectedVolume.controllers && selectedVolume.controllers[0] && selectedVolume.controllers[0].actualSize ? selectedVolume.controllers[0].actualSize : ''
   const defaultImage = engineImages.find(image => image.default === true)
@@ -276,7 +285,9 @@ function VolumeInfo({ selectedVolume, snapshotModalState, engineImages, hosts, c
       </div>
       <div className={styles.row}>
         <span className={styles.label}> Frontend:</span>
-        {(frontends.find(item => item.value === selectedVolume.frontend) || '').label}
+        {selectedVolume.disableFrontend ? <Tooltip title={'Attach volume without enabling frontend. Volume data will not be accessible while attached.'}>
+            <Icon type="disconnect" className="healthy" />
+          </Tooltip> : (frontends.find(item => item.value === selectedVolume.frontend) || '').label}
       </div>
       <div className={styles.row}>
         <span className={styles.label}> Backend Data Engine:</span>
@@ -324,7 +335,7 @@ function VolumeInfo({ selectedVolume, snapshotModalState, engineImages, hosts, c
         <Tooltip title={'Provides the binary to start and communicate with the volume engine/replicas.'}>
           <span className={styles.label}> Engine Image:</span>
         </Tooltip>
-        {selectedVolume.engineImage}
+        {selectedVolume.image}
       </div>
       <div className={styles.row}>
         <span className={styles.label}> Created:</span>

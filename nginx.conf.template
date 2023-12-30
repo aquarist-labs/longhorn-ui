@@ -1,10 +1,16 @@
 events { worker_connections 1024; }
+daemon off;
+
+error_log /dev/stdout info;
+
 http {
+    access_log /dev/stdout;
+
     server {
         gzip on;
         gzip_min_length 1k;
         gzip_comp_level 2;
-        gzip_types text/html text/plain application/javascript application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png image/svg+xml;
+        gzip_types text/plain application/javascript application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png image/svg+xml;
         gzip_vary on;
         gzip_disable "MSIE [1-6]\.";
         include /etc/nginx/mime.types;
@@ -34,16 +40,21 @@ http {
             client_max_body_size 0;
         }
 
+        location ~ ^/.(images|javascript|js|css|flash|media|static)/ {
+             root /web/dist;
+        }
+
+        location ~ ^/objectstore/([^/]+) {
+            resolver ${NAMESERVER_IP};
+            client_max_body_size 0;
+            proxy_pass http://$1.${LONGHORN_NAMESPACE_DOMAIN}:8080;
+        }
+
         location / {
             root /web/dist;
             index  index.html;
             add_header Cache-Control "max-age=0";
             try_files $uri $uri/ /index.html =404;
         }
-
-        location ~ ^/.(images|javascript|js|css|flash|media|static)/ {
-             root /web/dist;       
-        }
-
     }
 }
